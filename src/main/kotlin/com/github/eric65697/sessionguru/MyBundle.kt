@@ -1,4 +1,4 @@
-package org.jetbrains.plugins.template
+package com.github.eric65697.sessionguru
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
