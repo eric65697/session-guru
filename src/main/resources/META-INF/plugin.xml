@@ -10,9 +10,12 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.github.eric65697.sessionguru.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <postStartupActivity implementation="com.github.eric65697.sessionguru.activities.SGProjectStartupActivity" />
+        <editorFactoryListener implementation="com.github.eric65697.sessionguru.listeners.SGEditorFactoryListener" />
     </extensions>
 
     <applicationListeners>
-        <listener class="com.github.eric65697.sessionguru.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
+        <listener class="com.github.eric65697.sessionguru.listeners.SGProjectManagerListener" topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="com.github.eric65697.sessionguru.listeners.SGFileEditorManagerListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </applicationListeners>
 </idea-plugin>

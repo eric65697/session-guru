@@ -1,5 +1,13 @@
 # session-guru
 
+## Features
+1. Save a session with name for all editing files.
+2. Able to change order of saved file list.
+3. A popup window of all saved sessions.
+4. Key shortcuts to toggle Session Guru window.
+5. Users can restore a session from Session Guru window.
+
+
 ![Build](https://github.com/eric65697/session-guru/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
