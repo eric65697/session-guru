@@ -3,12 +3,16 @@ package com.github.eric65697.sessionguru.services
 import com.github.eric65697.sessionguru.MyBundle
 import com.github.eric65697.sessionguru.model.Session
 import com.github.eric65697.sessionguru.relativePath
+import com.github.eric65697.sessionguru.toVirtualFile
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.util.io.toCanonicalPath
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.inputStreamIfExists
 import kotlinx.coroutines.CoroutineScope
@@ -54,14 +58,16 @@ class SGSessionManager(
 //    val session = sessions.addFiles("", files)
 //    logger.debug("${session.files.size} files in the default session")
   }
-//
+
+  //
   fun onFileClosed(file: VirtualFile) {
 //    if (closing) return
 //    val fileToRemove = file.canonicalPath ?: return
 //    val session = sessions.removeFiles("", fileToRemove)
 //    logger.debug("${session?.files?.size} files left in the default session")
   }
-//
+
+  //
   fun onFileSelected(file: VirtualFile) {
 //    val fileToSelect = file.canonicalPath ?: return
 //    sessions.changeFocus("", fileToSelect)
@@ -170,6 +176,19 @@ class SGSessionManager(
         currentSession = Session("")
         sessions.add(currentSession)
       }
+    }
+  }
+
+  fun restoreSessionFiles(session: Session) {
+    val fileEditorManager = FileEditorManager.getInstance(project)
+    cs.launch(Dispatchers.EDT) {
+      withContext(Dispatchers.IO) {
+        session.files.mapNotNull {
+          val virtualFile = project.toVirtualFile(it)
+          if (virtualFile == null) logger.warn("File not found: $it")
+          virtualFile
+        }
+      }.forEach { fileEditorManager.openFile(it) }
     }
   }
 
