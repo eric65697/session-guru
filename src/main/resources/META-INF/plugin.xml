@@ -7,15 +7,54 @@
     <depends>com.intellij.modules.platform</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
+    <actions>
+        <action id="com.github.eric65697.sessionguru.actions.SGListAction"
+                class="com.github.eric65697.sessionguru.actions.SGListAction" text="List Sessions"
+                description="List all saved sessions" icon="AllIcons.Actions.ListFiles">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <override-text place="MainMenu" text="List Sessions"/>
+            <keyboard-shortcut first-keystroke="control alt E" second-keystroke="E" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F12" second-keystroke="E" keymap="$default"/>
+        </action>
+        <action id="com.github.eric65697.sessionguru.actions.SGAddCurrentFileAction"
+                class="com.github.eric65697.sessionguru.actions.SGAddCurrentFileAction" text="Add Current File"
+                description="Add current file" icon="AllIcons.Actions.AddFile">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <override-text place="MainMenu" text="Add Current File"/>
+            <keyboard-shortcut first-keystroke="control alt E" second-keystroke="A" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F12" second-keystroke="A" keymap="$default"/>
+        </action>
+        <action id="com.github.eric65697.sessionguru.actions.SGDeleteCurrentFileAction"
+                class="com.github.eric65697.sessionguru.actions.SGDeleteCurrentFileAction"
+                text="Delete Current File"
+                description="Delete current file" icon="AllIcons.Diff.Remove">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <override-text place="MainMenu" text="Delete Current File"/>
+            <keyboard-shortcut first-keystroke="control alt E" second-keystroke="D" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F12" second-keystroke="D" keymap="$default"/>
+        </action>
+        <action id="com.github.eric65697.sessionguru.actions.SGRestoreAction"
+                class="com.github.eric65697.sessionguru.actions.SGRestoreAction"
+                text="Restore Current Session"
+                description="Restore current session" icon="AllIcons.Diff.Revert">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <override-text place="MainMenu" text="Restore Current Session"/>
+            <keyboard-shortcut first-keystroke="control alt E" second-keystroke="R" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F12" second-keystroke="R" keymap="$default"/>
+        </action>
+    </actions>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.github.eric65697.sessionguru.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.eric65697.sessionguru.activities.SGProjectStartupActivity" />
-        <editorFactoryListener implementation="com.github.eric65697.sessionguru.listeners.SGEditorFactoryListener" />
+        <postStartupActivity implementation="com.github.eric65697.sessionguru.activities.SGProjectStartupActivity"/>
+        <editorFactoryListener implementation="com.github.eric65697.sessionguru.listeners.SGEditorFactoryListener"/>
+        <notificationGroup displayType="BALLOON" id="Session Guru Notification Group" key="notification.group.name"/>
     </extensions>
 
     <applicationListeners>
-        <listener class="com.github.eric65697.sessionguru.listeners.SGProjectManagerListener" topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener class="com.github.eric65697.sessionguru.listeners.SGFileEditorManagerListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener class="com.github.eric65697.sessionguru.listeners.SGProjectManagerListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="com.github.eric65697.sessionguru.listeners.SGFileEditorManagerListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </applicationListeners>
 </idea-plugin>

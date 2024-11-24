@@ -15,6 +15,6 @@ class SGProjectStartupActivity : ProjectActivity {
       EditorFactory.getInstance().allEditors.mapNotNull { fileDocumentManager.getFile(it.document) }
     sessionManager.onFileOpened(virtualFiles)
     thisLogger().debug("${project.name} opened with ${virtualFiles.size} editors")
-    project.getService(SGSessionManager::class.java).load()
+    sessionManager.load()
   }
 }

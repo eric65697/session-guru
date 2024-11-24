@@ -2,6 +2,7 @@ package com.github.eric65697.sessionguru.services
 
 import com.github.eric65697.sessionguru.MyBundle
 import com.github.eric65697.sessionguru.model.Session
+import com.github.eric65697.sessionguru.relativePath
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -35,6 +36,7 @@ class SGSessionManager(
 
   private val logger = thisLogger()
   private var closing = false
+  private lateinit var currentSession: Session
   private val sessions = arrayListOf<Session>()
   private val projectPath = project.guessProjectDir()?.canonicalPath ?: ""
   private val storagePath: Path by lazy {
@@ -43,36 +45,41 @@ class SGSessionManager(
     else Path(projectPath, ".idea")
   }
 
+  val activeSession: Session
+    get() = currentSession
+
   fun onFileOpened(virtualFiles: List<VirtualFile>) {
-    val files = virtualFiles.mapNotNull { it.canonicalPath }
-    if (files.isEmpty()) return
-    val session = sessions.addFiles("", files)
-    logger.debug("${session.files.size} files in the default session")
+//    val files = virtualFiles.mapNotNull { it.canonicalPath }
+//    if (files.isEmpty()) return
+//    val session = sessions.addFiles("", files)
+//    logger.debug("${session.files.size} files in the default session")
   }
-
+//
   fun onFileClosed(file: VirtualFile) {
-    if (closing) return
-    val fileToRemove = file.canonicalPath ?: return
-    val session = sessions.removeFiles("", fileToRemove)
-    logger.debug("${session?.files?.size} files left in the default session")
+//    if (closing) return
+//    val fileToRemove = file.canonicalPath ?: return
+//    val session = sessions.removeFiles("", fileToRemove)
+//    logger.debug("${session?.files?.size} files left in the default session")
   }
-
+//
   fun onFileSelected(file: VirtualFile) {
-    val fileToSelect = file.canonicalPath ?: return
-    sessions.changeFocus("", fileToSelect)
-    logger.debug("Selected $fileToSelect")
+//    val fileToSelect = file.canonicalPath ?: return
+//    sessions.changeFocus("", fileToSelect)
+//    logger.debug("Selected $fileToSelect")
   }
 
-  fun addFile(sessionName: String, virtualFile: VirtualFile) {
-    val file = virtualFile.canonicalPath ?: return
+  fun addFile(sessionName: String, virtualFile: VirtualFile): String {
+    val file = project.relativePath(virtualFile.canonicalPath ?: return "")
     sessions.addFiles(sessionName, listOf(file))
     save()
+    return file
   }
 
-  fun removeFile(sessionName: String, virtualFile: VirtualFile) {
-    val file = virtualFile.canonicalPath ?: return
+  fun removeFile(sessionName: String, virtualFile: VirtualFile): String {
+    val file = project.relativePath(virtualFile.canonicalPath ?: return "")
     val session = sessions.removeFiles(sessionName, file)
     if (session != null) save()
+    return file
   }
 
   fun removeSession(sessionName: String) {
@@ -156,8 +163,12 @@ class SGSessionManager(
         }
       logger.info("Loaded ${sessionList.size} sessions")
       sessionList.forEach { session ->
-        if (session.name == "") return@forEach
+        if (session.name == "") currentSession = session
         sessions.add(session)
+      }
+      if (!::currentSession.isInitialized) {
+        currentSession = Session("")
+        sessions.add(currentSession)
       }
     }
   }
