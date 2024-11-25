@@ -14,7 +14,7 @@ fun Project.notifyWarning(content: String) {
   NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
     .createNotification(content, NotificationType.WARNING).notify(this)
 }
-fun Project.notifyErro(content: String) {
+fun Project.notifyError(content: String) {
   NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
     .createNotification(content, NotificationType.ERROR).notify(this)
 }
