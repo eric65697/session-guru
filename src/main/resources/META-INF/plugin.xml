@@ -48,7 +48,7 @@
         <toolWindow factoryClass="com.github.eric65697.sessionguru.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
         <postStartupActivity implementation="com.github.eric65697.sessionguru.activities.SGProjectStartupActivity"/>
         <editorFactoryListener implementation="com.github.eric65697.sessionguru.listeners.SGEditorFactoryListener"/>
-        <notificationGroup displayType="BALLOON" id="Session Guru Notification Group" key="notification.group.name"/>
+        <notificationGroup displayType="BALLOON" id="Session Guru Notification Group" key="notification_group_name"/>
     </extensions>
 
     <applicationListeners>

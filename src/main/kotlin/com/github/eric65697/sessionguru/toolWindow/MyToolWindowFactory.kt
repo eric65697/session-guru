@@ -68,7 +68,7 @@ class MyToolWindowFactory : ToolWindowFactory {
       logger.debug("updateSessionList: adding session panel")
       sessionPanel.component = panel {
         sessionList.forEach { session ->
-          val name = session.name.ifEmpty { MyBundle.message("defaultSession") }
+          val name = session.name.ifEmpty { MyBundle.message("default_session") }
           logger.debug("updateSessionList: adding session $name, files: ${session.files.size}")
           collapsibleGroup(name) {
             row {

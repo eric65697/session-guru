@@ -35,7 +35,7 @@ class SGSessionManager(
   private val cs: CoroutineScope,
 ) : Disposable {
   init {
-    thisLogger().info(MyBundle.message("projectService", project.name))
+    thisLogger().info(MyBundle.message("project_service", project.name))
   }
 
   private val logger = thisLogger()
