@@ -22,6 +22,7 @@ class SGSessionPopup(project: Project) : PopupUpdateProcessor(project) {
   private val sessions = sessionManager?.getSession() ?: emptyList()
   private val popup: JBPopup
   private val fileListPanel = JPanel()
+  private lateinit var sessionTab: JBList<String>
 
   init {
     val popupBuilder = JBPopupFactory.getInstance().createComponentPopupBuilder(createMainPanel(), null)
@@ -40,6 +41,7 @@ class SGSessionPopup(project: Project) : PopupUpdateProcessor(project) {
       .addUserData(sessions)
 
     popup = popupBuilder.createPopup()
+    popup.setRequestFocus(true)
   }
 
   private fun createMainPanel(): JPanel {
@@ -54,27 +56,39 @@ class SGSessionPopup(project: Project) : PopupUpdateProcessor(project) {
   private fun createSessionList(): JComponent {
     val listModel = DefaultListModel<String>()
     listModel.addAll(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
-    listModel.addElement(MyBundle.message("session_create_new"))
-    val list = JBList(listModel)
-    list.addListSelectionListener { refreshFileList(list.selectedIndex) }
-    list.selectedIndex = 0
-    refreshFileList(0)
-    list.preferredWidth = 200
-    return list
+    val selectedIndex = sessionManager?.getSession()?.indexOfFirst { it == sessionManager.activeSession } ?: 0
+    sessionTab = JBList(listModel)
+    sessionTab.selectedIndex = selectedIndex
+    refreshFileList(selectedIndex, true)
+    sessionTab.addListSelectionListener { refreshFileList(sessionTab.selectedIndex) }
+    sessionTab.preferredWidth = 200
+    sessionTab.isFocusable = true
+    return sessionTab
   }
 
-  private fun refreshFileList(selectedIndex: Int) {
+  private fun refreshFileList(selectedIndex: Int, init: Boolean = false) {
     fileListPanel.removeAll()
-    val session = sessionManager?.getSession()?.get(selectedIndex)
+    val session = sessionManager?.getSession()?.getOrNull(selectedIndex)
     if (session != null) {
       val listModel = DefaultListModel<String>()
       listModel.addAll(session.files)
       val fileList = JBList(listModel)
       fileListPanel.layout = BorderLayout()
       fileListPanel.add(fileList, BorderLayout.CENTER)
+      sessionManager?.setCurrentSession(session)
+      if (!init) {
+        popup.setCaption(
+          MyBundle.message(
+            "popup_title",
+            sessions.size,
+            session.name.ifEmpty { MyBundle.message("default_session") })
+        )
+      }
     }
-    fileListPanel.revalidate()
-    fileListPanel.repaint()
+    if (!init) {
+      fileListPanel.revalidate()
+      fileListPanel.repaint()
+    }
   }
 
   fun show() {

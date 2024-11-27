@@ -95,6 +95,10 @@ class SGSessionManager(
 
   fun getSession(): List<Session> = sessions
 
+  fun setCurrentSession(session: Session) {
+    currentSession = session
+  }
+
   private fun ArrayList<Session>.addFiles(name: String, files: List<String>): Session {
     val index = indexOfFirst { it.name == name }
     if (index != -1) {
@@ -103,6 +107,7 @@ class SGSessionManager(
         if (it !in newFiles) newFiles.add(it)
       }
       this[index] = this[index].copy(files = newFiles, timestamp = System.currentTimeMillis())
+      if (currentSession.name == name) currentSession = this[index]
       return this[index]
     } else {
       add(Session(name, files))
@@ -115,6 +120,7 @@ class SGSessionManager(
     if (index != -1) {
       val newFiles = this[index].files.filter { it != file }
       this[index] = this[index].copy(files = newFiles, timestamp = System.currentTimeMillis())
+      if (currentSession.name == name) currentSession = this[index]
       return this[index]
     }
     return null
@@ -124,6 +130,7 @@ class SGSessionManager(
     val index = indexOfFirst { it.name == name }
     if (index != -1) {
       this[index] = this[index].copy(focusedFile = focusedFile, timestamp = System.currentTimeMillis())
+      if (currentSession.name == name) currentSession = this[index]
     }
   }
 
