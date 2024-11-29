@@ -13,10 +13,12 @@ import com.intellij.ui.util.preferredWidth
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ActionEvent
+import java.awt.event.KeyEvent
 import javax.swing.Action
 import javax.swing.DefaultListModel
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.KeyStroke
 
 class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val sessionManager = project.sgSessionManager
@@ -133,5 +135,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
         val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession }
         refreshFileList(selectedIndex)
       }
+    }.apply {
+      putValue(Action.MNEMONIC_KEY, KeyEvent.VK_A)
     }
 }
