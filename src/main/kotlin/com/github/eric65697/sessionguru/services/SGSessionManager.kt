@@ -12,7 +12,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.util.io.toCanonicalPath
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.inputStreamIfExists
 import kotlinx.coroutines.CoroutineScope
@@ -81,6 +80,13 @@ class SGSessionManager(
     return file
   }
 
+  fun addAllFiles(sessionName: String, virtualFileList: List<VirtualFile>) {
+    sessions.addFiles(
+      sessionName,
+      virtualFileList.mapNotNull { project.relativePath(it.canonicalPath ?: return@mapNotNull null) })
+    save()
+  }
+
   fun removeFile(sessionName: String, virtualFile: VirtualFile): String {
     val file = project.relativePath(virtualFile.canonicalPath ?: return "")
     val session = sessions.removeFiles(sessionName, file)
@@ -89,7 +95,9 @@ class SGSessionManager(
   }
 
   fun removeSession(sessionName: String) {
+    if (sessionName.isEmpty()) return
     sessions.removeIf { it.name == sessionName }
+    if (currentSession.name == sessionName) currentSession = sessions.first()
     save()
   }
 
@@ -97,6 +105,14 @@ class SGSessionManager(
 
   fun setCurrentSession(session: Session) {
     currentSession = session
+  }
+
+  fun createSession(name: String): Boolean {
+    if (sessions.firstOrNull { it.name == name } != null) return false
+    val session = Session(name = name)
+    sessions.add(session)
+    currentSession = session
+    return true
   }
 
   private fun ArrayList<Session>.addFiles(name: String, files: List<String>): Session {
