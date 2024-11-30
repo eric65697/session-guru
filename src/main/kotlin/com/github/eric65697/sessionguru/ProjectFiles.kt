@@ -2,6 +2,7 @@ package com.github.eric65697.sessionguru
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
@@ -19,6 +20,11 @@ fun Project.relativePath(file: String): String {
 }
 
 fun Project.toVirtualFile(file: String): VirtualFile? {
+  if (file.contains("zip!") || file.contains("jar!")) {
+    val zipFile = JarFileSystem.getInstance().findFileByPath(file)
+    if (zipFile != null) return zipFile
+  }
+
   val localFileSystem = LocalFileSystem.getInstance()
   return localFileSystem.findFileByNioFile(File(file).toPath())
     ?: localFileSystem.findFileByNioFile(
