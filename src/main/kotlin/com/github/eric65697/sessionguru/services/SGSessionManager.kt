@@ -93,6 +93,17 @@ class SGSessionManager(
     return file
   }
 
+  fun removeFiles(sessionName: String, indices: IntArray): Session? {
+    val session = sessions.firstOrNull { it.name == sessionName } ?: return null
+    indices.reversed().forEach { index ->
+      if (index >= 0 && index < session.files.size) {
+        session.files.removeAt(index)
+      }
+    }
+    save()
+    return session
+  }
+
   fun removeSession(sessionName: String) {
     if (sessionName.isEmpty()) return
     val index = sessions.indexOfFirst { it.name == sessionName }

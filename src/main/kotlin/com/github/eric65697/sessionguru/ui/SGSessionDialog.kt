@@ -37,7 +37,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   override fun createCenterPanel(): JComponent {
     val panel = JPanel()
-    panel.preferredSize = Dimension(800, 600)
+    panel.preferredSize = Dimension(800, 400)
     panel.layout = BorderLayout()
     panel.add(createSessionList(), BorderLayout.WEST)
     panel.add(fileListPanel, BorderLayout.CENTER)
@@ -50,13 +50,15 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
     val selectedIndex = sessionManager?.getSession()?.indexOfFirst { it == sessionManager.activeSession } ?: 0
     sessionTab = JBList(listModel)
     val toolbarDecorator = ToolbarDecorator.createDecorator(sessionTab)
+    toolbarDecorator.disableUpAction()
+    toolbarDecorator.disableDownAction()
     sessionTab.selectedIndex = selectedIndex
     refreshFileList(selectedIndex, true)
     sessionTab.addListSelectionListener { refreshFileList(sessionTab.selectedIndex) }
     sessionTab.isFocusable = true
 
     toolbarDecorator.setAddAction { createNewSession() }
-    toolbarDecorator.setRemoveAction { removeCurrentSession() }
+    toolbarDecorator.setRemoveAction { removeSelectedSession(sessionTab.selectedIndex) }
     val toolbarPanel = toolbarDecorator.createPanel()
     toolbarPanel.preferredWidth = 200
     return toolbarPanel
@@ -80,8 +82,13 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       val listModel = DefaultListModel<String>()
       listModel.addAll(session.files)
       val fileList = JBList(listModel)
+      val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
+      toolbarDecorator.disableAddAction()
+      toolbarDecorator.disableUpAction()
+      toolbarDecorator.disableDownAction()
+      toolbarDecorator.setRemoveAction { removeFileFromSession(session.name, fileList) }
       fileListPanel.layout = BorderLayout()
-      fileListPanel.add(fileList, BorderLayout.CENTER)
+      fileListPanel.add(toolbarDecorator.createPanel(), BorderLayout.CENTER)
       sessionManager?.setCurrentSession(session)
       if (!init) {
         title = MyBundle.message(
@@ -94,6 +101,14 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       fileListPanel.revalidate()
       fileListPanel.repaint()
     }
+  }
+
+  private fun removeFileFromSession(name: String, fileList: JBList<String>) {
+    val selected = fileList.selectedIndices
+    val listModel = fileList.model as DefaultListModel<String>
+    val session = sessionManager?.removeFiles(name, selected) ?: return
+    listModel.removeAllElements()
+    listModel.addAll(session.files)
   }
 
   private fun createNewSession() {
@@ -109,16 +124,15 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
     }
   }
 
-  private fun removeCurrentSession() {
-    val session = sessionManager?.activeSession ?: return
+  private fun removeSelectedSession(index: Int) {
+    val session = sessionManager?.getSession()?.getOrNull(index) ?: return
     sessionManager.removeSession(session.name)
     refreshSessionTab()
   }
 
+  override fun createActions(): Array<Action> = arrayOf(cancelAction)
 
-  override fun createLeftSideActions(): Array<Action> {
-    return arrayOf(addAllOpenFilesAction)
-  }
+  override fun createLeftSideActions(): Array<Action> = arrayOf(addAllOpenFilesAction)
 
   private val addAllOpenFilesAction: Action
     get() = object : DialogWrapperAction(MyBundle.message("add_open_files")) {
