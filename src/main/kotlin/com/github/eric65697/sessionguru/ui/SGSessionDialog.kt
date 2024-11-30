@@ -9,11 +9,12 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.CollectionListModel
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
-import com.intellij.ui.util.preferredWidth
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.Action
 import javax.swing.DefaultListModel
 import javax.swing.JComponent
@@ -60,7 +61,9 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
     toolbarDecorator.setAddAction { createNewSession() }
     toolbarDecorator.setRemoveAction { removeSelectedSession(sessionTab.selectedIndex) }
     val toolbarPanel = toolbarDecorator.createPanel()
-    toolbarPanel.preferredWidth = 200
+    val preferredSize = toolbarPanel.preferredSize
+    preferredSize.width = 200
+    toolbarPanel.preferredSize = preferredSize
     return toolbarPanel
   }
 
@@ -82,6 +85,15 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       val listModel = DefaultListModel<String>()
       listModel.addAll(session.files)
       val fileList = JBList(listModel)
+      fileList.addMouseListener(object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent) {
+          if (e.clickCount == 2) {
+            val index = fileList.locationToIndex(e.point)
+            openFileInList(listModel, index)
+          }
+        }
+      })
+
       val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
       toolbarDecorator.disableAddAction()
       toolbarDecorator.disableUpAction()
@@ -101,6 +113,11 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       fileListPanel.revalidate()
       fileListPanel.repaint()
     }
+  }
+
+  private fun openFileInList(listModel: DefaultListModel<String>, index: Int) {
+    sessionManager?.openFile(listModel.get(index))
+    doCancelAction()
   }
 
   private fun removeFileFromSession(name: String, fileList: JBList<String>) {

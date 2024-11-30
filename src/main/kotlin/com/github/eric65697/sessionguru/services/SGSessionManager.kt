@@ -79,6 +79,17 @@ class SGSessionManager(
     return file
   }
 
+  fun openFile(file: String) {
+    cs.launch(Dispatchers.EDT) {
+      val vf = withContext(Dispatchers.IO) {
+        val virtualFile = project.toVirtualFile(file)
+        if (virtualFile == null) logger.warn("File not found: $file")
+        virtualFile
+      }
+      if (vf != null) FileEditorManager.getInstance(project).openFile(vf)
+    }
+  }
+
   fun addAllFiles(sessionName: String, virtualFileList: List<VirtualFile>) {
     sessions.addFiles(
       sessionName,

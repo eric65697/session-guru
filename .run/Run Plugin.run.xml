@@ -2,6 +2,13 @@
   <configuration default="false" name="Run Plugin" type="GradleRunConfiguration" factoryName="Gradle">
     <log_file alias="IDE logs" path="$PROJECT_DIR$/build/idea-sandbox/*/log/idea.log" show_all="true" />
     <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="CERTIFICATE_CHAIN" value="$USER_HOME$/cert/chain.crt" />
+          <entry key="PRIVATE_KEY" value="$USER_HOME$/cert/private.pem" />
+          <entry key="PRIVATE_KEY_PASSWORD" value="apple pie apple pie" />
+        </map>
+      </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
