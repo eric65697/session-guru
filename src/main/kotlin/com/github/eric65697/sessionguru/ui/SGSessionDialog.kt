@@ -18,7 +18,6 @@ import javax.swing.Action
 import javax.swing.DefaultListModel
 import javax.swing.JComponent
 import javax.swing.JPanel
-import javax.swing.KeyStroke
 
 class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val sessionManager = project.sgSessionManager
@@ -117,14 +116,9 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   }
 
 
-  override fun createActions(): Array<Action> {
-    return super.createActions()
-  }
-
   override fun createLeftSideActions(): Array<Action> {
     return arrayOf(addAllOpenFilesAction)
   }
-
 
   private val addAllOpenFilesAction: Action
     get() = object : DialogWrapperAction(MyBundle.message("add_open_files")) {

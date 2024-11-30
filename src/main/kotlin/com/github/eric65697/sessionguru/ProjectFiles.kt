@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 
 fun Project.relativePath(file: String): String {
+  if (file.startsWith("jar:")) return file
   val projectPath = guessProjectDir()?.canonicalPath
   if (projectPath.isNullOrEmpty()) return file
   if (file.startsWith(projectPath)) {

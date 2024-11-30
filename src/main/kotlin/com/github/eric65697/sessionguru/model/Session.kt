@@ -8,9 +8,11 @@ data class Session(
   @SerialName("name")
   val name: String,
   @SerialName("files")
-  val files: List<String> = listOf(),
+  val files: MutableList<String> = mutableListOf(),
+  @SerialName("selected")
+  var selected: Boolean = false,
   @SerialName("focused_file")
-  val focusedFile: String = "",
+  var focusedFile: String = "",
   @SerialName("timestamp")
-  val timestamp: Long = System.currentTimeMillis(),
+  var timestamp: Long = System.currentTimeMillis(),
 )

@@ -39,7 +39,6 @@ class SGSessionManager(
 
   private val logger = thisLogger()
   private var closing = false
-  private lateinit var currentSession: Session
   private val sessions = arrayListOf<Session>()
   private val projectPath = project.guessProjectDir()?.canonicalPath ?: ""
   private val storagePath: Path by lazy {
@@ -49,7 +48,7 @@ class SGSessionManager(
   }
 
   val activeSession: Session
-    get() = currentSession
+    get() = sessions.first { it.selected }
 
   fun onFileOpened(virtualFiles: List<VirtualFile>) {
 //    val files = virtualFiles.mapNotNull { it.canonicalPath }
@@ -96,58 +95,55 @@ class SGSessionManager(
 
   fun removeSession(sessionName: String) {
     if (sessionName.isEmpty()) return
-    sessions.removeIf { it.name == sessionName }
-    if (currentSession.name == sessionName) currentSession = sessions.first()
+    val index = sessions.indexOfFirst { it.name == sessionName }
+    if (index == -1) return
+
+    val removed = sessions.removeAt(index)
+    if (removed.selected && sessions.size > 0) {
+      val next = if (index >= sessions.size) index - 1 else index
+      sessions[next].selected = true
+    }
     save()
   }
 
   fun getSession(): List<Session> = sessions
 
   fun setCurrentSession(session: Session) {
-    currentSession = session
+    val currentSession = sessions.first { it.selected }
+    val targetSession = sessions.firstOrNull { it.name == session.name }
+    if (targetSession != null && currentSession.name != targetSession.name) {
+      targetSession.selected = true
+      currentSession.selected = false
+      save()
+    }
   }
 
   fun createSession(name: String): Boolean {
     if (sessions.firstOrNull { it.name == name } != null) return false
-    val session = Session(name = name)
+    sessions.forEach { if (it.selected) it.selected = false }
+    val session = Session(name = name, selected = true)
     sessions.add(session)
-    currentSession = session
+    save()
     return true
   }
 
   private fun ArrayList<Session>.addFiles(name: String, files: List<String>): Session {
-    val index = indexOfFirst { it.name == name }
-    if (index != -1) {
-      val newFiles = this[index].files.toMutableList()
-      files.forEach {
-        if (it !in newFiles) newFiles.add(it)
-      }
-      this[index] = this[index].copy(files = newFiles, timestamp = System.currentTimeMillis())
-      if (currentSession.name == name) currentSession = this[index]
-      return this[index]
-    } else {
-      add(Session(name, files))
-      return this[lastIndex]
+    val session = sessions.firstOrNull { it.name == name } ?: Session(name).also { sessions.add(it) }
+    files.forEach { file ->
+      if (file !in session.files) session.files.add(file)
     }
+    return session
   }
 
   private fun ArrayList<Session>.removeFiles(name: String, file: String): Session? {
-    val index = indexOfFirst { it.name == name }
-    if (index != -1) {
-      val newFiles = this[index].files.filter { it != file }
-      this[index] = this[index].copy(files = newFiles, timestamp = System.currentTimeMillis())
-      if (currentSession.name == name) currentSession = this[index]
-      return this[index]
-    }
-    return null
+    val session = sessions.firstOrNull { it.name == name } ?: return null
+    session.files.remove(file)
+    return session
   }
 
   private fun ArrayList<Session>.changeFocus(name: String, focusedFile: String) {
-    val index = indexOfFirst { it.name == name }
-    if (index != -1) {
-      this[index] = this[index].copy(focusedFile = focusedFile, timestamp = System.currentTimeMillis())
-      if (currentSession.name == name) currentSession = this[index]
-    }
+    val session = sessions.firstOrNull { it.name == name } ?: return
+    session.focusedFile = focusedFile
   }
 
   fun saveOnClosing() {
@@ -191,13 +187,15 @@ class SGSessionManager(
           emptyList()
         }
       logger.info("Loaded ${sessionList.size} sessions")
-      sessionList.forEach { session ->
-        if (session.name == "") currentSession = session
-        sessions.add(session)
-      }
-      if (!::currentSession.isInitialized) {
-        currentSession = Session("")
-        sessions.add(currentSession)
+      sessions.addAll(sessionList)
+      val selected = sessions.firstOrNull { it.selected }
+      if (selected == null) {
+        val defaultSession = sessionList.firstOrNull { it.name == "" }
+        if (defaultSession == null) {
+          sessions.add(Session("", selected = true))
+        } else {
+          defaultSession.selected = true
+        }
       }
     }
   }
