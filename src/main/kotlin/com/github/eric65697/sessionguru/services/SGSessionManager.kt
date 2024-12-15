@@ -4,6 +4,7 @@ import com.github.eric65697.sessionguru.MyBundle
 import com.github.eric65697.sessionguru.model.Session
 import com.github.eric65697.sessionguru.relativePath
 import com.github.eric65697.sessionguru.toVirtualFile
+import com.github.eric65697.sessionguru.ui.reorderIndices
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
@@ -97,9 +98,8 @@ class SGSessionManager(
     save()
   }
 
-  fun reorderFile(session: Session, fromIndex: Int, toIndex: Int) {
-    val file = session.files.removeAt(fromIndex)
-    session.files.add(toIndex, file)
+  fun reorderFile(session: Session, selectedIndices: IntArray, toIndex: Int) {
+    session.files.reorderIndices(selectedIndices, toIndex)
     save()
   }
 
@@ -155,9 +155,8 @@ class SGSessionManager(
     return true
   }
 
-  fun moveSession(fromIndex: Int, index: Int) {
-    val session = sessions.removeAt(fromIndex)
-    sessions.add(index, session)
+  fun moveSession(selectedIndices: IntArray, toIndex: Int) {
+    sessions.reorderIndices(selectedIndices, toIndex)
     save()
   }
 

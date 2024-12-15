@@ -25,6 +25,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val sessions = sessionManager.getSession()
   private val fileListPanel = JPanel()
   private lateinit var sessionTab: JBList<String>
+  private val sessionTabs: List<String> get() = sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } }
 
   init {
     sessionManager.activeSession.let { session ->
@@ -47,8 +48,8 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   private fun createSessionList(): JComponent {
     val listModel = DefaultListModel<String>()
-    listModel.addAll(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
-    val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession } ?: 0
+    listModel.addAll(sessionTabs)
+    val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession }
     sessionTab = JBList(listModel)
     val toolbarDecorator = ToolbarDecorator.createDecorator(sessionTab)
     toolbarDecorator.disableUpAction()
@@ -60,9 +61,11 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       isFocusable = true
       dragEnabled = true
       dropMode = DropMode.INSERT
-      transferHandler = ReorderHandler(listModel) { fromIndex, toIndex ->
-        sessionManager.moveSession(fromIndex, toIndex)
-        sessionTab.selectedIndex = toIndex
+      transferHandler = ReorderHandler(listModel) { selectedIndices, toIndex ->
+        sessionManager.moveSession(selectedIndices, toIndex)
+        listModel.removeAllElements()
+        listModel.addAll(sessionTabs)
+        sessionTab.selectedIndex = toIndex.coerceAtMost(sessions.lastIndex)
       }
     }
 
@@ -77,7 +80,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   private fun refreshSessionTab() {
     val listModel = DefaultListModel<String>()
-    listModel.addAll(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
+    listModel.addAll(sessionTabs)
     val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession }
     sessionTab.model = listModel
     sessionTab.selectedIndex = selectedIndex
@@ -103,8 +106,10 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       })
       fileList.dragEnabled = true
       fileList.dropMode = DropMode.INSERT
-      fileList.transferHandler = ReorderHandler(listModel) { fromIndex, toIndex ->
-        sessionManager.reorderFile(session, fromIndex, toIndex)
+      fileList.transferHandler = ReorderHandler(listModel) { selectedIndices, toIndex ->
+        sessionManager.reorderFile(session, selectedIndices, toIndex)
+        listModel.removeAllElements()
+        listModel.addAll(session.files)
       }
 
       val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
@@ -197,8 +202,8 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       val fileType = FileTypeRegistry.getInstance().getFileTypeByFileName(value)
       icon = fileType.icon
       val file = File(value)
-      append(file.name, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES, true)
-      append(" - $value", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+      append(file.name, SimpleTextAttributes.REGULAR_ATTRIBUTES, true)
+      append(" $value", SimpleTextAttributes.GRAYED_ATTRIBUTES)
     }
   }
 }
