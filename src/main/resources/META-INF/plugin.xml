@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.eric65697.sessionguru</id>
-    <name>session-guru</name>
+    <name>Session Guru</name>
     <vendor>eric65697</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -14,7 +14,7 @@
             <add-to-group group-id="ToolsMenu" anchor="first"/>
             <override-text place="MainMenu" text="List Sessions"/>
             <keyboard-shortcut first-keystroke="control alt E" second-keystroke="E" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="F12" second-keystroke="E" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F10" second-keystroke="E" keymap="$default"/>
         </action>
         <action id="com.github.eric65697.sessionguru.actions.SGAddCurrentFileAction"
                 class="com.github.eric65697.sessionguru.actions.SGAddCurrentFileAction" text="Add Current File"
@@ -23,7 +23,7 @@
                           relative-to-action="com.github.eric65697.sessionguru.actions.SGListAction"/>
             <override-text place="MainMenu" text="Add Current File"/>
             <keyboard-shortcut first-keystroke="control alt E" second-keystroke="A" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="F12" second-keystroke="A" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F10" second-keystroke="A" keymap="$default"/>
         </action>
         <action id="com.github.eric65697.sessionguru.actions.SGDeleteCurrentFileAction"
                 class="com.github.eric65697.sessionguru.actions.SGDeleteCurrentFileAction"
@@ -33,7 +33,7 @@
                           relative-to-action="com.github.eric65697.sessionguru.actions.SGAddCurrentFileAction"/>
             <override-text place="MainMenu" text="Delete Current File"/>
             <keyboard-shortcut first-keystroke="control alt E" second-keystroke="D" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="F12" second-keystroke="D" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F10" second-keystroke="D" keymap="$default"/>
         </action>
         <action id="com.github.eric65697.sessionguru.actions.SGRestoreAction"
                 class="com.github.eric65697.sessionguru.actions.SGRestoreAction"
@@ -43,7 +43,7 @@
                           relative-to-action="com.github.eric65697.sessionguru.actions.SGDeleteCurrentFileAction"/>
             <override-text place="MainMenu" text="Restore Current Session"/>
             <keyboard-shortcut first-keystroke="control alt E" second-keystroke="R" keymap="$default"/>
-            <keyboard-shortcut first-keystroke="F12" second-keystroke="R" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="F10" second-keystroke="R" keymap="$default"/>
         </action>
     </actions>
 

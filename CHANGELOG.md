@@ -3,5 +3,6 @@
 # session-guru Changelog
 
 ## [Unreleased]
-### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+### 0.0.5
+- First version to be released with basic session managment and file restoring.
+- Show file name and type icon first in file list

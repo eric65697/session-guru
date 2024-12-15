@@ -25,11 +25,16 @@
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
-
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
-
-To keep everything working, do not remove `<!-- ... -->` sections. 
+    Save your current working files and restore them easily with one keystore!
+    If you're working on a mono repo or a large project, having to switch between different tasks and work on different
+    sets of files, you know the pain to find files for previous tasks!
+    The default keystrokes:
+    <ul>
+        <li>Open session dialog: First - Ctrl Alt E (Mac: Cmd Alt E), Second - E</li>
+        <li>Add the current file to the current session: First - Ctrl Alt E (Mac: Cmd Alt E), Second - A</li>
+        <li>Delete the current file from the current session: First - Ctrl Alt E (Mac: Cmd Alt E), Second - D</li>
+        <li>Restore the current session: First - Ctrl Alt E (Mac: Cmd Alt E), Second - R</li>
+    </ul>
 <!-- Plugin description end -->
 
 ## Installation

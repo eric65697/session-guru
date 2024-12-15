@@ -3,10 +3,13 @@ package com.github.eric65697.sessionguru.ui
 import com.github.eric65697.sessionguru.MyBundle
 import com.github.eric65697.sessionguru.sgSessionManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.CollectionListModel
+import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import java.awt.BorderLayout
@@ -15,10 +18,8 @@ import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.Action
-import javax.swing.DefaultListModel
-import javax.swing.JComponent
-import javax.swing.JPanel
+import java.io.File
+import javax.swing.*
 
 class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val sessionManager = project.sgSessionManager
@@ -85,6 +86,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       val listModel = DefaultListModel<String>()
       listModel.addAll(session.files)
       val fileList = JBList(listModel)
+      fileList.cellRenderer = SessionFileRenderer()
       fileList.addMouseListener(object : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent) {
           if (e.clickCount == 2) {
@@ -149,7 +151,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   override fun createActions(): Array<Action> = arrayOf(cancelAction)
 
-  override fun createLeftSideActions(): Array<Action> = arrayOf(addAllOpenFilesAction)
+  override fun createLeftSideActions(): Array<Action> = arrayOf(addAllOpenFilesAction, restoreSessionAction)
 
   private val addAllOpenFilesAction: Action
     get() = object : DialogWrapperAction(MyBundle.message("add_open_files")) {
@@ -163,4 +165,29 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
     }.apply {
       putValue(Action.MNEMONIC_KEY, KeyEvent.VK_A)
     }
+
+  private val restoreSessionAction: Action
+    get() = object : DialogWrapperAction(MyBundle.message("restore_session")) {
+      override fun doAction(event: ActionEvent?) {
+        val currentSession = sessionManager?.activeSession ?: return
+        sessionManager.restoreSessionFiles(currentSession)
+        doCancelAction()
+      }
+    }
+
+  class SessionFileRenderer : ColoredListCellRenderer<String>() {
+    override fun customizeCellRenderer(
+      list: JList<out String>,
+      value: String,
+      index: Int,
+      selected: Boolean,
+      hasFocus: Boolean
+    ) {
+      val fileType = FileTypeRegistry.getInstance().getFileTypeByFileName(value)
+      icon = fileType.icon
+      val file = File(value)
+      append(file.name, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES, true)
+      append(" - $value", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+    }
+  }
 }
