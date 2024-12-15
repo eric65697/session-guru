@@ -97,6 +97,12 @@ class SGSessionManager(
     save()
   }
 
+  fun reorderFile(session: Session, fromIndex: Int, toIndex: Int) {
+    val file = session.files.removeAt(fromIndex)
+    session.files.add(toIndex, file)
+    save()
+  }
+
   fun removeFile(sessionName: String, virtualFile: VirtualFile): String {
     val file = project.relativePath(virtualFile.canonicalPath ?: return "")
     val session = sessions.removeFiles(sessionName, file)
@@ -147,6 +153,12 @@ class SGSessionManager(
     sessions.add(session)
     save()
     return true
+  }
+
+  fun moveSession(fromIndex: Int, index: Int) {
+    val session = sessions.removeAt(fromIndex)
+    sessions.add(index, session)
+    save()
   }
 
   private fun ArrayList<Session>.addFiles(name: String, files: List<String>): Session {

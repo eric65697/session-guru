@@ -7,7 +7,6 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
-import com.intellij.ui.CollectionListModel
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.ToolbarDecorator
@@ -23,12 +22,12 @@ import javax.swing.*
 
 class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val sessionManager = project.sgSessionManager
-  private val sessions = sessionManager?.getSession() ?: emptyList()
+  private val sessions = sessionManager.getSession()
   private val fileListPanel = JPanel()
   private lateinit var sessionTab: JBList<String>
 
   init {
-    sessionManager?.activeSession?.let { session ->
+    sessionManager.activeSession.let { session ->
       title = MyBundle.message(
         "popup_title",
         sessions.size,
@@ -47,17 +46,25 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   }
 
   private fun createSessionList(): JComponent {
-    val listModel = CollectionListModel<String>()
-    listModel.add(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
-    val selectedIndex = sessionManager?.getSession()?.indexOfFirst { it == sessionManager.activeSession } ?: 0
+    val listModel = DefaultListModel<String>()
+    listModel.addAll(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
+    val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession } ?: 0
     sessionTab = JBList(listModel)
     val toolbarDecorator = ToolbarDecorator.createDecorator(sessionTab)
     toolbarDecorator.disableUpAction()
     toolbarDecorator.disableDownAction()
-    sessionTab.selectedIndex = selectedIndex
     refreshFileList(selectedIndex, true)
-    sessionTab.addListSelectionListener { refreshFileList(sessionTab.selectedIndex) }
-    sessionTab.isFocusable = true
+    sessionTab.selectedIndex = selectedIndex
+    sessionTab.apply {
+      addListSelectionListener { refreshFileList(sessionTab.selectedIndex) }
+      isFocusable = true
+      dragEnabled = true
+      dropMode = DropMode.INSERT
+      transferHandler = ReorderHandler(listModel) { fromIndex, toIndex ->
+        sessionManager.moveSession(fromIndex, toIndex)
+        sessionTab.selectedIndex = toIndex
+      }
+    }
 
     toolbarDecorator.setAddAction { createNewSession() }
     toolbarDecorator.setRemoveAction { removeSelectedSession(sessionTab.selectedIndex) }
@@ -69,9 +76,8 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   }
 
   private fun refreshSessionTab() {
-    if (sessionManager == null) return
-    val listModel = CollectionListModel<String>()
-    listModel.add(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
+    val listModel = DefaultListModel<String>()
+    listModel.addAll(sessions.map { it.name.ifEmpty { MyBundle.message("default_session") } })
     val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession }
     sessionTab.model = listModel
     sessionTab.selectedIndex = selectedIndex
@@ -81,7 +87,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   private fun refreshFileList(selectedIndex: Int, init: Boolean = false) {
     fileListPanel.removeAll()
-    val session = sessionManager?.getSession()?.getOrNull(selectedIndex)
+    val session = sessionManager.getSession().getOrNull(selectedIndex)
     if (session != null) {
       val listModel = DefaultListModel<String>()
       listModel.addAll(session.files)
@@ -95,6 +101,11 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
           }
         }
       })
+      fileList.dragEnabled = true
+      fileList.dropMode = DropMode.INSERT
+      fileList.transferHandler = ReorderHandler(listModel) { fromIndex, toIndex ->
+        sessionManager.reorderFile(session, fromIndex, toIndex)
+      }
 
       val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
       toolbarDecorator.disableAddAction()
@@ -103,7 +114,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       toolbarDecorator.setRemoveAction { removeFileFromSession(session.name, fileList) }
       fileListPanel.layout = BorderLayout()
       fileListPanel.add(toolbarDecorator.createPanel(), BorderLayout.CENTER)
-      sessionManager?.setCurrentSession(session)
+      sessionManager.setCurrentSession(session)
       if (!init) {
         title = MyBundle.message(
           "popup_title",
@@ -118,14 +129,14 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   }
 
   private fun openFileInList(listModel: DefaultListModel<String>, index: Int) {
-    sessionManager?.openFile(listModel.get(index))
+    sessionManager.openFile(listModel.get(index))
     doCancelAction()
   }
 
   private fun removeFileFromSession(name: String, fileList: JBList<String>) {
     val selected = fileList.selectedIndices
     val listModel = fileList.model as DefaultListModel<String>
-    val session = sessionManager?.removeFiles(name, selected) ?: return
+    val session = sessionManager.removeFiles(name, selected) ?: return
     listModel.removeAllElements()
     listModel.addAll(session.files)
   }
@@ -138,13 +149,13 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       Messages.getQuestionIcon()
     )
     if (!name.isNullOrEmpty()) {
-      if (sessionManager?.createSession(name) != true) return
+      if (sessionManager.createSession(name) != true) return
       refreshSessionTab()
     }
   }
 
   private fun removeSelectedSession(index: Int) {
-    val session = sessionManager?.getSession()?.getOrNull(index) ?: return
+    val session = sessionManager.getSession().getOrNull(index) ?: return
     sessionManager.removeSession(session.name)
     refreshSessionTab()
   }
@@ -156,7 +167,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val addAllOpenFilesAction: Action
     get() = object : DialogWrapperAction(MyBundle.message("add_open_files")) {
       override fun doAction(event: ActionEvent) {
-        val currentSession = sessionManager?.activeSession ?: return
+        val currentSession = sessionManager.activeSession
         sessionManager.addAllFiles(currentSession.name,
           FileEditorManager.getInstance(project).allEditors.map { it.file })
         val selectedIndex = sessionManager.getSession().indexOfFirst { it == sessionManager.activeSession }
@@ -169,7 +180,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
   private val restoreSessionAction: Action
     get() = object : DialogWrapperAction(MyBundle.message("restore_session")) {
       override fun doAction(event: ActionEvent?) {
-        val currentSession = sessionManager?.activeSession ?: return
+        val currentSession = sessionManager.activeSession
         sessionManager.restoreSessionFiles(currentSession)
         doCancelAction()
       }
