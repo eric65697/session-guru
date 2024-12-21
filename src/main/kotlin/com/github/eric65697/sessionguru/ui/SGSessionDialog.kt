@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.ListSpeedSearch
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
@@ -69,6 +70,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       }
     }
 
+    ListSpeedSearch.installOn(sessionTab)
     toolbarDecorator.setAddAction { createNewSession() }
     toolbarDecorator.setRemoveAction { removeSelectedSession(sessionTab.selectedIndex) }
     val toolbarPanel = toolbarDecorator.createPanel()
@@ -112,6 +114,10 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
         listModel.addAll(session.files)
       }
 
+      ListSpeedSearch.installOn(fileList) { filePath ->
+        val file = File(filePath)
+        file.name.ifEmpty { filePath }
+      }
       val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
       toolbarDecorator.disableAddAction()
       toolbarDecorator.disableUpAction()
@@ -154,7 +160,7 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
       Messages.getQuestionIcon()
     )
     if (!name.isNullOrEmpty()) {
-      if (sessionManager.createSession(name) != true) return
+      if (!sessionManager.createSession(name)) return
       refreshSessionTab()
     }
   }
