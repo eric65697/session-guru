@@ -4,15 +4,18 @@ import com.github.eric65697.sessionguru.MyBundle
 import com.github.eric65697.sessionguru.model.Session
 import com.github.eric65697.sessionguru.relativePath
 import com.github.eric65697.sessionguru.toVirtualFile
+import com.github.eric65697.sessionguru.ui.ColoredFile
 import com.github.eric65697.sessionguru.ui.reorderIndices
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.util.io.toCanonicalPath
+import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.inputStreamIfExists
 import kotlinx.coroutines.CoroutineScope
@@ -158,6 +161,24 @@ class SGSessionManager(
   fun moveSession(selectedIndices: IntArray, toIndex: Int) {
     sessions.reorderIndices(selectedIndices, toIndex)
     save()
+  }
+
+  fun getFileColorsAsync(files: List<String>, callback: (List<ColoredFile>) -> Unit) {
+    cs.launch {
+      callback(
+        withContext(Dispatchers.IO) {
+          val fileStatusManager = FileStatusManager.getInstance(project)
+          val colorScheme = EditorColorsManager.getInstance().schemeForCurrentUITheme
+          files.map { file ->
+            val virtualFile = project.toVirtualFile(file)
+            if (virtualFile != null) {
+              ColoredFile(file, colorScheme.getColor(fileStatusManager.getStatus(virtualFile).colorKey))
+            } else {
+              ColoredFile(file)
+            }
+          }
+        })
+    }
   }
 
   private fun ArrayList<Session>.addFiles(name: String, files: List<String>): Session {

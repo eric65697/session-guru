@@ -92,64 +92,70 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
 
   private fun refreshFileList(selectedIndex: Int, init: Boolean = false) {
     fileListPanel.removeAll()
-    val session = sessionManager.getSession().getOrNull(selectedIndex)
-    if (session != null) {
-      val listModel = DefaultListModel<String>()
-      listModel.addAll(session.files)
-      val fileList = JBList(listModel)
-      fileList.cellRenderer = SessionFileRenderer()
-      fileList.addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent) {
-          if (e.clickCount == 2) {
-            val index = fileList.locationToIndex(e.point)
-            openFileInList(listModel, index)
-          }
+    val session = sessionManager.getSession().getOrNull(selectedIndex) ?: return
+    val listModel = DefaultListModel<ColoredFile>()
+    sessionManager.getFileColorsAsync(session.files) {
+      listModel.addAll(it)
+    }
+    val fileList = JBList(listModel)
+    fileList.isFocusable = true
+    fileList.cellRenderer = ColoredFileRenderer()
+    fileList.addMouseListener(object : MouseAdapter() {
+      override fun mouseClicked(e: MouseEvent) {
+        if (e.clickCount == 2) {
+          val index = fileList.locationToIndex(e.point)
+          openFileInList(listModel, index)
         }
-      })
-      fileList.dragEnabled = true
-      fileList.dropMode = DropMode.INSERT
-      fileList.transferHandler = ReorderHandler(listModel) { selectedIndices, toIndex ->
-        sessionManager.reorderFile(session, selectedIndices, toIndex)
-        listModel.removeAllElements()
-        listModel.addAll(session.files)
       }
+    })
+    fileList.dragEnabled = true
+    fileList.dropMode = DropMode.INSERT
+    fileList.transferHandler = ReorderHandler(listModel) { selectedIndices, toIndex ->
+      sessionManager.reorderFile(session, selectedIndices, toIndex)
+      listModel.removeAllElements()
+      sessionManager.getFileColorsAsync(session.files) {
+        listModel.addAll(it)
+      }
+    }
 
-      ListSpeedSearch.installOn(fileList) { filePath ->
-        val file = File(filePath)
-        file.name.ifEmpty { filePath }
-      }
-      val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
-      toolbarDecorator.disableAddAction()
-      toolbarDecorator.disableUpAction()
-      toolbarDecorator.disableDownAction()
-      toolbarDecorator.setRemoveAction { removeFileFromSession(session.name, fileList) }
-      fileListPanel.layout = BorderLayout()
-      fileListPanel.add(toolbarDecorator.createPanel(), BorderLayout.CENTER)
-      sessionManager.setCurrentSession(session)
-      if (!init) {
-        title = MyBundle.message(
-          "popup_title",
-          sessions.size,
-          session.name.ifEmpty { MyBundle.message("default_session") })
-      }
+    ListSpeedSearch.installOn(fileList) { coloredFile ->
+      val file = File(coloredFile.file)
+      file.name.ifEmpty { coloredFile.file }
+    }
+    val toolbarDecorator = ToolbarDecorator.createDecorator(fileList)
+    toolbarDecorator.disableAddAction()
+    toolbarDecorator.disableUpAction()
+    toolbarDecorator.disableDownAction()
+    toolbarDecorator.setRemoveAction { removeFileFromSession(session.name, fileList) }
+    fileListPanel.layout = BorderLayout()
+    fileListPanel.add(toolbarDecorator.createPanel(), BorderLayout.CENTER)
+    sessionManager.setCurrentSession(session)
+    if (!init) {
+      title = MyBundle.message(
+        "popup_title",
+        sessions.size,
+        session.name.ifEmpty { MyBundle.message("default_session") })
     }
     if (!init) {
       fileListPanel.revalidate()
       fileListPanel.repaint()
     }
+    fileList.requestFocus()
   }
 
-  private fun openFileInList(listModel: DefaultListModel<String>, index: Int) {
-    sessionManager.openFile(listModel.get(index))
+  private fun openFileInList(listModel: DefaultListModel<ColoredFile>, index: Int) {
+    sessionManager.openFile(listModel.get(index).file)
     doCancelAction()
   }
 
-  private fun removeFileFromSession(name: String, fileList: JBList<String>) {
+  private fun removeFileFromSession(name: String, fileList: JBList<ColoredFile>) {
     val selected = fileList.selectedIndices
-    val listModel = fileList.model as DefaultListModel<String>
+    val listModel = fileList.model as DefaultListModel<ColoredFile>
     val session = sessionManager.removeFiles(name, selected) ?: return
     listModel.removeAllElements()
-    listModel.addAll(session.files)
+    sessionManager.getFileColorsAsync(session.files) {
+      listModel.addAll(it)
+    }
   }
 
   private fun createNewSession() {
@@ -196,20 +202,4 @@ class SGSessionDialog(private val project: Project) : DialogWrapper(project) {
         doCancelAction()
       }
     }
-
-  class SessionFileRenderer : ColoredListCellRenderer<String>() {
-    override fun customizeCellRenderer(
-      list: JList<out String>,
-      value: String,
-      index: Int,
-      selected: Boolean,
-      hasFocus: Boolean
-    ) {
-      val fileType = FileTypeRegistry.getInstance().getFileTypeByFileName(value)
-      icon = fileType.icon
-      val file = File(value)
-      append(file.name, SimpleTextAttributes.REGULAR_ATTRIBUTES, true)
-      append(" $value", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-    }
-  }
 }

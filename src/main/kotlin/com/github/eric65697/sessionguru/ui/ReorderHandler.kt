@@ -11,10 +11,10 @@ import javax.swing.JComponent
 import javax.swing.JList
 import javax.swing.TransferHandler
 
-class ReorderHandler(private val listModel: DefaultListModel<String>, private val moveTo: (IntArray, Int) -> Unit) :
+class ReorderHandler(private val listModel: DefaultListModel<*>, private val moveTo: (IntArray, Int) -> Unit) :
   TransferHandler() {
   private val logger = thisLogger()
-  private val localObjectFlavor = DataFlavor(arrayOf(Object())::class.java, "String objects")
+  private val localObjectFlavor = DataFlavor(Unit::class.java, "Not used")
   private var selectedIndices = intArrayOf()
 
   override fun canImport(support: TransferSupport): Boolean {
@@ -43,8 +43,8 @@ class ReorderHandler(private val listModel: DefaultListModel<String>, private va
     val location = support.dropLocation as JList.DropLocation
     val dropIndex = location.index
     try {
-      val values = support.transferable.getTransferData(localObjectFlavor) as? Array<*> ?: return false
-      if (values.isEmpty() || selectedIndices.size != values.size) return false
+//      val values = support.transferable.getTransferData(localObjectFlavor) as? Array<*> ?: return false
+//      if (values.isEmpty() || selectedIndices.size != values.size) return false
       if (dropIndex < 0 || dropIndex > listModel.size) return false
       logger.info("Move item from [${selectedIndices.joinToString(",")}] to $dropIndex")
       moveTo(selectedIndices, dropIndex)
@@ -53,6 +53,8 @@ class ReorderHandler(private val listModel: DefaultListModel<String>, private va
       // ignore
     } catch (_: IOException) {
       // ignore
+    } finally {
+      selectedIndices = intArrayOf()
     }
     return false
   }
