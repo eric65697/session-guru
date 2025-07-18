@@ -8,15 +8,17 @@ import com.intellij.openapi.editor.event.EditorFactoryListener
 class SGEditorFactoryListener : EditorFactoryListener {
   override fun editorCreated(event: EditorFactoryEvent) {
     super.editorCreated(event)
-    thisLogger().debug("Created editor for ${event.editor.virtualFile.canonicalPath}")
+    val virtualFile = event.editor.virtualFile ?: return
+    thisLogger().debug("Created editor for ${virtualFile.canonicalPath}")
     event.editor.project?.getService(SGSessionManager::class.java)
-      ?.onFileOpened(listOf(event.editor.virtualFile))
+      ?.onFileOpened(listOf(virtualFile))
   }
 
   override fun editorReleased(event: EditorFactoryEvent) {
     super.editorReleased(event)
+    val virtualFile = event.editor.virtualFile ?: return
     thisLogger().debug("Released editor for ${event.editor.virtualFile.canonicalPath}")
     event.editor.project?.getService(SGSessionManager::class.java)
-      ?.onFileClosed(event.editor.virtualFile)
+      ?.onFileClosed(virtualFile)
   }
 }
